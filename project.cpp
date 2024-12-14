@@ -2,6 +2,7 @@
 #include <time.h>
 #include <string>
 #include <conio.h>
+#include <fstream>
 using namespace std;
 
 enum Key { W = 119, S = 115, SPACEBAR = 32 };
@@ -22,7 +23,7 @@ int rollAttack = 0;
 
 int playerPotion = 2;
 int playerExp = 0;
-int playerLevel = 0;
+int playerLevel = 1;
 
 
 string monsterDetails;
@@ -52,10 +53,13 @@ string monster;
 int Goblin[] = {20, 3, 5, 5};
 int Gargoyle[] = {35, 5, 8, 15};
 int ShadowWerewolf[] = {70, 13, 15, 100};
-int Hydra[] = {50, 10, 12, 70};
-int Firedrake[] = {100, 3, 4, 50};
-int UndeadWarrior[] = {50, 7, 10, 20};
+int Hydra[] = {150, 10, 12, 70};
+int Firedrake[] = {100, 15, 38, 50};
+int UndeadWarrior[] = {50, 80, 15, 85};
 
+int VampireLord[] = {1000, 50, 30, 0};
+
+void levelDetermine();
 void menuWindow();
 void classWindow();
 void weaponWindow();
@@ -82,8 +86,8 @@ void reward();
 void battleEnd();
 void rewardFail();
 void transitionToContinue();
-void transitionToOptions();
 void transitionToExit();
+void gameComplete();
 
 int main() {
 	menuWindow();
@@ -94,7 +98,7 @@ void menuWindow() {
 	classMenu = false;
 	weaponMenu = false;
 	combatMenu = false;
-	string menuOptions[] = { "Start Game", "Continue", "Options", "Exit" };
+	string menuOptions[] = { "Start Game", "Continue", "Exit" };
     int size = sizeof(menuOptions) / sizeof(menuOptions[0]);
     system("cls");
     display(menuOptions, size);
@@ -116,8 +120,6 @@ void menuChoiceDetermine(string selectedOption) {
         classWindow();
     else if(selectedOption == "Continue")
     	transitionToContinue();
-    else if(selectedOption == "Options")
-        transitionToOptions();
     else if(selectedOption == "Exit")
     	transitionToExit();
 }
@@ -161,10 +163,12 @@ void weaponWindow() {
 
 void monsterDetermine() {
 	int monsterNumber;
-	if(playerLevel < 2)
+	if(playerLevel <= 2)
 		monsterNumber = randomNumberGenerator(1 , 2);
-	else
+	else if(playerLevel <= 4)
 		monsterNumber = randomNumberGenerator(1, 6);
+	else
+		monsterNumber = 7;
 	switch(monsterNumber) {
 		case 1:
 			monster = "Goblin";
@@ -191,11 +195,19 @@ void monsterDetermine() {
 			cout<<"\nThe air blazes with heat as a FireDrake descends, flames curling around its wings. Its molten eyes lock onto you, and a roar shakes the ground."<<endl;
 			getch();
 			break;
-		default:
+		case 6:
 			monster = "Undead Warrior";
 			cout<<"\nRattling echoes through the air as a warrior inflicted with the undead curse steps forward, sword in hand, its hollow eyes glowing with eerie light."<<endl;
 			getch();
 			break;
+		case 7:
+			monster = "Vampire Lord";
+			cout<<"\nAfter battling through the treacherous halls of the dungeon, you finally find yourself standing before the chamberâ€™s entrance. The air grows cold, and an unsettling silence fills the room."<<endl;
+			cout<<"At the far end, perched upon a throne of blackened stone, the Vampire Lord waits. His crimson eyes flicker open, glowing with malice, and his dark presence fills the room with an overwhelming sense of dread."<<endl<<endl;
+			getch();
+			cout<<"The very air around you thickens with the weight of centuries, as though time itself bends to his will. The Lord rises, his cloak billowing like smoke, revealing the true terror of the night."<<endl;
+			cout<<"The final battle has begun."<<endl;
+			getch();
 	}
 	monsterStatsDetermine();
 }
@@ -231,6 +243,11 @@ void monsterStatsDetermine() {
 		monsterStr = UndeadWarrior[1];
 		monsterPower = UndeadWarrior[2];
 		monsterExp = UndeadWarrior[3];		
+	} else if(monster == "Vampire Lord") {
+		monsterHp = VampireLord[0];
+		monsterStr = VampireLord[1];
+		monsterPower = VampireLord[2];
+		monsterExp = VampireLord[3];
 	}
 	dynamicMonsterHp = monsterHp;
 }
@@ -527,7 +544,7 @@ void death() {
 	getch();
 	cout<<""<<endl;
 	cout<<"The serpent coils tighter, the dungeon consuming you whole. Somewhere far above, the faint sliver of light dims, swallowed by the horrors you could not overcome."<<endl;
-	cout<<"The goblins cackle in the distance, the dragon roars triumphantly, and the presence in the shadows stirs, its hunger sated—for now."<<endl;
+	cout<<"The goblins cackle in the distance, the dragon roars triumphantly, and the presence in the shadows stirs, its hunger satedâ€”for now."<<endl;
 	getch();
 	cout<<""<<endl;
 	cout<<"Your journey ends here, but the dungeon remains. Waiting. Watching. Perhaps another will rise where you have fallen."<<endl;
@@ -563,7 +580,7 @@ void combatChoiceDetermine(string action) {
 		if(playerPotion > 0){
 			dynamicPlayerHp = dynamicPlayerHp + 30;
 			playerPotion--;
-			logArray[logIndex] = "> You drink the potion to regain your vigour [HP: +30], Remaining Potions: "  + to_string(playerPotion);
+			logArray[logIndex] = "> You drink the potion to regain your vigour [VIG: +30], Remaining Potions: "  + to_string(playerPotion);
 			logIndex++;
 		} else {
 			logArray[logIndex] = "> You have run out of healing potions.";
@@ -597,9 +614,21 @@ void combatChoiceDetermine(string action) {
 	} else {
 		monsterSpawn = true;
 		if(dynamicMonsterHp <= 0)
-		monsterDetermine();
+				monsterDetermine();
 	}
 	combatWindow();
+}
+
+void gameComplete() {
+	system("cls");
+	cout<<"With a final, desperate strike, the Vampire Lord collapses, his form crumbling into dust as the curse upon the dungeon is broken. The oppressive darkness lifts,"<<endl;
+	cout<<"and the cold chill that once filled the air slowly fades away. The once-ominous silence is replaced by the distant sounds of life returning to the world above."<<endl<<endl;
+	getch();
+	cout<<"The throne room, now devoid of its master, feels strangely still and empty. The oppressive weight that had held you in its grip is gone, and the path to freedom is clear."<<endl;
+	cout<<"As you make your way out of the chamber, the dungeon around you begins to crumble, as if the very walls are rejoicing in the fall of their tyrant."<<endl<<endl;
+	getch();
+	cout<<"Emerging from the depths, you are greeted by the fresh night air, the stars shining brightly overhead. The battle is won, and the darkness has been vanquished."<<endl<<endl;
+	exit(0);
 }
 
 void combatWindow() {
@@ -613,8 +642,8 @@ void combatWindow() {
 		firstSpawn = true;
 	}
 		
-	playerDetails = "[Class:" + playerClass + "] [VIG:" + to_string(dynamicPlayerHp) + "] [FOR:" + to_string(weaponStr[0]) + "d" + to_string(weaponStr[1]) + "] [POW:" + to_string(playerPower) + "]";
-	monsterDetails = "[Monster:" + monster + "] [VIG:" + to_string(dynamicMonsterHp) + "] [FOR:1d" + to_string(monsterStr) + "] [POW:" + to_string(monsterPower) + "]";
+	playerDetails = "[Class:" + playerClass + "] [VIG:" + to_string(dynamicPlayerHp) + "] [FOR:" + to_string(weaponStr[0]) + "d" + to_string(weaponStr[1]) + "] [POW:" + to_string(playerPower) + "] [LVL:" + to_string(playerLevel) + "]";
+	monsterDetails = "[Monster:" + monster + "] [VIG:" + to_string(dynamicMonsterHp) + "] [FOR:1d" + to_string(monsterStr) + "] [POW:" + to_string(monsterPower) + "] [EXP:" + to_string(monsterExp) + "]";
 	
 	string action[] = {"Attack", "Heal", "Run"};
 	int size = sizeof(action)/sizeof(action[0]);
@@ -625,7 +654,7 @@ void combatWindow() {
 void reward() {
 	playerPotion++;
 	cout<<"As the dust settles, your gaze falls upon a small, glimmering vial nestled amidst the debris. The liquid within glows a soft crimson,"<<endl;
-	cout<<"swirling as if alive — a Potion of Healing. Its warmth radiates through the glass, promising to restore strength"<<endl;
+	cout<<"swirling as if alive â€” a Potion of Healing. Its warmth radiates through the glass, promising to restore strength"<<endl;
 	cout<<"to the weary and mend wounds inflicted by the dungeon's perils.";
 	cout<<""<<endl<<endl;
 	getch();
@@ -633,33 +662,80 @@ void reward() {
 	getch();
 	cout<<"\nPotions in Inventory: "<<playerPotion<<endl;
 	getch();
-	cout<<"\nBut before you can even catch your breath, the ground trembles beneath your feet, and from the shadows, a new monster emerges—its eyes locked onto you,"<<endl;
-	cout<<"hunger in its gaze. This grueling gauntlet is far from over."<<endl;
-	getch();
+	if(playerLevel <= 4) {
+		cout<<"\nBut before you can even catch your breath, the ground trembles beneath your feet, and from the shadows, a new monster emergesâ€”its eyes locked onto you,"<<endl;
+		cout<<"hunger in its gaze. This grueling gauntlet is far from over."<<endl;
+		getch();
+	} else {
+		system("cls");
+	}
 }
 
 void battleEnd() {
 	system("cls");
-	int choiceNum = randomNumberGenerator(1 , 5);
-	if(choiceNum == 1) {
-		cout<<"The last of the monster crumples to the floor, its lifeless form casting long shadows in the dim light. Silence follows,"<<endl;
-		cout<<"broken only by the sound of your own breathing. The dungeon feels quieter now, as if even the walls are waiting for your next move.";
-	} else if(choiceNum == 2) {
-		cout<<"With a final, decisive blow, the creature falls, his twisted form dissolving into the shadow from which it came. The air grows still, the echo"<<endl;
-		cout<<"of battle fading into the silence of the dungeon. For now, the danger has passed, but the path ahead remains uncertain.";
-	} else if(choiceNum == 3) {
-		cout<<"The vile creature collapses, defeated and motionless. A heavy silence settles over the area, broken only by the faint drip of blood from the walls."<<endl;
-		cout<<"The victory is yours, but the dungeon is far from conquered. What awaits you deeper within?";
-	} else if(choiceNum == 4) {
-		cout<<"The monstrous threat has been vanquished, his body littering the ground, marking the end of this skirmish. You stand amidst the carnage,"<<endl;
-		cout<<"your breath heavy and your body sore, but victorious. The dungeon’s dark heart still beats ahead, waiting for you.";
-	} else if(choiceNum == 5) {
-		cout<<"As the final creature falls with a thud, the echoes of battle die away. The dungeon, once alive with the sounds of chaos,"<<endl;
-		cout<<"now falls into an eerie quiet. The threat has passed for now but the deeper dangers of the dungeon loom ahead, waiting for the next challenge.";
+	if(monster != "Vampire Lord"){
+		int choiceNum = randomNumberGenerator(1 , 5);
+		if(choiceNum == 1) {
+			cout<<"The last of the monster crumples to the floor, its lifeless form casting long shadows in the dim light. Silence follows,"<<endl;
+			cout<<"broken only by the sound of your own breathing. The dungeon feels quieter now, as if even the walls are waiting for your next move.";
+		} else if(choiceNum == 2) {
+			cout<<"With a final, decisive blow, the creature falls, his twisted form dissolving into the shadow from which it came. The air grows still, the echo"<<endl;
+			cout<<"of battle fading into the silence of the dungeon. For now, the danger has passed, but the path ahead remains uncertain.";
+		} else if(choiceNum == 3) {
+			cout<<"The vile creature collapses, defeated and motionless. A heavy silence settles over the area, broken only by the faint drip of blood from the walls."<<endl;
+			cout<<"The victory is yours, but the dungeon is far from conquered. What awaits you deeper within?";
+		} else if(choiceNum == 4) {
+			cout<<"The monstrous threat has been vanquished, his body littering the ground, marking the end of this skirmish. You stand amidst the carnage,"<<endl;
+			cout<<"your breath heavy and your body sore, but victorious. The dungeonâ€™s dark heart still beats ahead, waiting for you.";
+		} else if(choiceNum == 5) {
+			cout<<"As the final creature falls with a thud, the echoes of battle die away. The dungeon, once alive with the sounds of chaos,"<<endl;
+			cout<<"now falls into an eerie quiet. The threat has passed for now but the deeper dangers of the dungeon loom ahead, waiting for the next challenge.";
+		}
+		cout<<""<<endl<<endl;
+		cout<<"Your victory brings hope in this wretched place. As you rest, you feel the strength of your newfound experience. [EXP: +"<<monsterExp<<"]"<<endl<<endl;
+		levelDetermine();
+		getch();
+	} else {
+		gameComplete();
 	}
-	cout<<""<<endl<<endl;
-	cout<<"Your victory brings hope in this wretched place. As you rest, you feel the strength of your newfound experience. [EXP: +"<<monsterExp<<"]"<<endl<<endl;
-	getch();
+
+}
+
+void levelPerks() {
+	switch(playerLevel) {
+		case 2:
+			playerHp = playerHp + 25;
+			playerPower = playerPower + 5;
+			cout<<"[VIG: +25] [POW: +5]"<<endl<<endl;
+			break;
+		case 3:
+			playerHp = playerHp + 50;
+			playerPower = playerPower + 8;
+			cout<<"[VIG: +50] [POW: +8]"<<endl<<endl;
+			break;
+		case 4:
+			playerHp = playerHp + 75;
+			playerPower = playerPower + 15;
+			cout<<"[VIG: +75] [POW: +15]"<<endl<<endl;
+			break;
+		case 5:
+			playerHp = playerHp + 100;
+			playerPower = playerPower + 20;
+			cout<<"[VIG: +100] [POW: +20]"<<endl<<endl;
+			break;		
+	}
+	dynamicPlayerHp = playerHp;
+}
+
+void levelDetermine() {
+	playerExp = playerExp + monsterExp;
+	if(playerExp >= (playerLevel * 30)) {
+		playerLevel++;
+		cout<<"As your experience deepens, you uncover newfound powers within yourself. [LVL:"<<playerLevel<<"]"<<endl<<endl;
+		playerExp = 0;
+		levelPerks();
+	}
+		
 }
 
 void rewardFail() {
@@ -669,43 +745,50 @@ void rewardFail() {
 }
 
 void transitionToContinue() {
-	system("cls");
-	cout<<"This feature is not yet implemented.";
-}
-
-void transitionToOptions() {
+	// Function to load game progress and resume
     system("cls");
-    cout << "You chose to go to options.";
+    string filename = "CS101.txt";
+
+    // Variables to store saved progress
+    string savedClass;
+    int savedHp, savedDynamicHp, savedPower, savedPotion, savedExp, savedLevel;
+    string savedWeapon;
+    int savedWeaponStr[2];
+
+    ifstream inFile(filename);
+
+    if (inFile.is_open()) {
+        // Read saved progress
+        inFile >> savedClass;
+        inFile >> savedHp >> savedDynamicHp >> savedPower;
+        inFile >> savedPotion >> savedExp >> savedLevel;
+        inFile >> savedWeapon >> savedWeaponStr[0] >> savedWeaponStr[1];
+        inFile.close();
+
+        // Load saved data into game variables
+        playerClass = savedClass;
+        playerHp = savedHp;
+        dynamicPlayerHp = savedDynamicHp;
+        playerPower = savedPower;
+        playerPotion = savedPotion;
+        playerExp = savedExp;
+        playerLevel = savedLevel;
+        playerWeapon = savedWeapon;
+        weaponStr[0] = savedWeaponStr[0];
+        weaponStr[1] = savedWeaponStr[1];
+
+        cout << "Game loaded successfully!\n";
+        cout << "Welcome back, " << playerClass << ".\n";
+        combatWindow(); // Resume game in combat mode
+    } else {
+        cout << "No save file found. Start a new game instead.\n";
+        getch();
+        menuWindow();
+    }
 }
 
 void transitionToExit() {
     system("cls");
     cout << "Goodbye.";
+    exit(0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
